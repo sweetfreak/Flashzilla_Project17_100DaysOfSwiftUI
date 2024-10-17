@@ -6,6 +6,121 @@
 //
 
 import SwiftUI
+struct ContentView: View {
+    var body: some View {
+        Text("Hello, world")
+    }
+}
+
+/*  //Day 87 - Support specific accessibility neds with swiftUI
+
+func withOptionalAnimation<Result>(_ animation: Animation? = .default, _ body: () throws -> Result) rethrows -> Result {
+    if UIAccessibility.isReduceMotionEnabled {
+        return try body()
+    } else {
+        return try withAnimation(animation, body)
+    }
+}
+
+struct ContentView: View {
+    @Environment(\.accessibilityDifferentiateWithoutColor) var accessibilityDifferentiateWithoutColor
+    
+    
+    @Environment(\.accessibilityReduceMotion) var accessibilityReduceMotion
+    @State private var scale = 1.0
+    
+    @Environment(\.accessibilityReduceTransparency) var accessibilityReduceTransparency
+    
+    
+    var body: some View {
+        
+        VStack {
+            Button("Hello World!") {
+                withOptionalAnimation {
+                    scale *= 1.5
+                }
+                
+//                if accessibilityReduceMotion {
+//                    scale *= 1.5
+//                } else {
+//                    withAnimation {
+//                        scale *= 1.5
+//                    }
+//                }
+            }
+            .scaleEffect(scale)
+            
+            Spacer()
+            
+            Text("Hello, friends")
+                .padding()
+                .background(accessibilityReduceTransparency ? .black : .black.opacity(0.5))
+                .foregroundStyle(.white)
+                .clipShape(.capsule)
+            
+            Spacer()
+            HStack {
+                if accessibilityDifferentiateWithoutColor {
+                    Image(systemName: "checkmark.circle")
+                }
+                
+                Text("Success")
+            }
+            .padding()
+            .background(accessibilityDifferentiateWithoutColor ? .black : .green)
+            .foregroundStyle(.white)
+            .clipShape(.capsule)
+        }
+    }
+}
+ */
+
+/*
+//Day 87 - be notified when app is in background/foreground
+struct ContentView: View {
+    
+    @Environment(\.scenePhase) var scenePhase
+    
+    var body: some View {
+        Text("Hello, world")
+            .onChange(of: scenePhase) { oldPhase, newPhase in
+                if newPhase == .active {
+                    print("Active")
+                } else if newPhase == .inactive {
+                    print("Inactive") //means might be active, but user can't access for some reason, like if you swipe up to switch apps, or a notification appears, or screentime, or control center is pulled down.
+                } else if newPhase == .background {
+                    print("Background")
+                }
+            }
+    }
+}
+*/
+
+/* //Day 87 - trigger events repeatedly using a timer
+struct ContentView: View {
+    
+    @State private var counter = 0
+    
+    let timer = Timer.publish(every: 1, tolerance: 0.5, on: .main, in: .common).autoconnect()
+    //tolerance - optional property that allows iOS to perform timer coalescing - which is the adjusting of a timer/notification going off, which is helpful when saving battery power, but less helpful when the time needs to be closer to exact (it's best effort, though - not 100% guaranteed).
+    
+    var body: some View {
+        Text("Hello, World")
+            .onReceive(timer) { time in
+                if counter == 5 {
+                    timer.upstream.connect().cancel()
+                } else {
+                    print("The Time is now \(time)")
+                }
+                counter += 1
+            }
+    }
+//    func cancelTimer() {
+//        timer.upstream.connect().cancel()
+//    }
+}
+ */
+
 
 /* //Day 86 - disabling user interactivity with allowsHitTesting() and enabling with contentShape(.rect)
 struct ContentView: View {

@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct CardView: View {
+    @Environment(\.accessibilityDifferentiateWithoutColor) var accessibilityDifferentiateWithoutColor
     
     @State private var offset = CGSize.zero //no drag, by default
     @State private var isShowingAnswer = false
@@ -19,7 +20,18 @@ struct CardView: View {
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 25)
-                .fill(.white)
+                .fill(
+                    accessibilityDifferentiateWithoutColor
+                    ? .white
+                    : .white
+                        .opacity(1-Double(abs(offset.width / 50)))
+                )
+                .background(
+                    accessibilityDifferentiateWithoutColor
+                    ? nil
+                    : RoundedRectangle(cornerRadius: 25)
+                        .fill(offset.width > 0 ? .green : .red)
+                )
                 .shadow(radius: 10)
             
             VStack {
@@ -34,6 +46,9 @@ struct CardView: View {
             }
             .padding(20)
             .multilineTextAlignment(.center)
+            
+            
+            
         }
         //this order matters, especially with offsets and rotations!
         .frame(width: 450, height: 250) // this is the smallest iPhone's biggest size

@@ -16,8 +16,10 @@ extension View {
 
 struct ContentView: View {
     @Environment(\.accessibilityDifferentiateWithoutColor) var accessibilityDifferentiateWithoutColor
+    @Environment(\.accessibilityVoiceOverEnabled) var accessibilityVoiceOverEnabled
 
-    @State private var cards = Array<Card>(repeating: .example, count: 10)
+    @State private var cards = [Card]()
+    @State private var showingEditScreen = false
     
     @State private var timeRemaining = 100
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
@@ -28,7 +30,7 @@ struct ContentView: View {
     
     var body: some View {
         ZStack {
-            Image(.background)
+            Image(decorative:"background") //voiceover won't read it out now
                 .resizable()
                 .ignoresSafeArea()
             VStack {
@@ -47,7 +49,9 @@ struct ContentView: View {
                                 removeCard(at: index)
                             }
                         }
-                            .stacked(at: index, in: cards.count)
+                        .stacked(at: index, in: cards.count)
+                        .allowsHitTesting(index == cards.count - 1)
+                        .accessibilityHidden(index < cards.count - 1)
                     }
                 }
                 .allowsHitTesting(timeRemaining > 0)
@@ -60,21 +64,58 @@ struct ContentView: View {
                         .clipShape(.capsule)
                 }
             }
-            if accessibilityDifferentiateWithoutColor {
-                VStack {
+            
+            VStack {
+                HStack {
                     Spacer()
-                    HStack {
-                        Image(systemName: "xmark.circle")
+                    
+                    Button {
+                        showingEditScreen = true
+                    } label: {
+                        Image(systemName: "plus.circle")
                             .padding()
                             .background(.black.opacity(0.7))
                             .clipShape(.circle)
+                    }
+                }
+                Spacer()
+            }
+            .foregroundStyle(.white)
+            .font(.largeTitle)
+            .padding()
+            
+            if accessibilityDifferentiateWithoutColor || accessibilityVoiceOverEnabled {
+                VStack {
+                    Spacer()
+                    
+                    HStack {
+                        Button {
+                            withAnimation {
+                                removeCard(at: cards.count - 1)
+                            }
+                        } label: {
+                            Image(systemName: "xmark.circle")
+                                .padding()
+                                .background(.black.opacity(0.7))
+                                .clipShape(.circle)
+                        }
+                        .accessibilityLabel("Wrong")
+                        .accessibilityHint("Mark your answer as being incorrect.")
                         
                         Spacer()
                         
-                        Image(systemName: "checkmark.circle")
-                            .padding()
-                            .background(.black.opacity(0.7))
-                            .clipShape(.circle)
+                        Button {
+                            withAnimation {
+                                removeCard(at: cards.count - 1)
+                            }
+                        } label: {
+                            Image(systemName: "checkmark.circle")
+                                .padding()
+                                .background(.black.opacity(0.7))
+                                .clipShape(.circle)
+                        }
+                        .accessibilityLabel("Correct")
+                        .accessibilityHint("Mark your answer as being correct.")
                     }
                     .foregroundStyle(.white)
                     .font(.largeTitle)
@@ -98,20 +139,37 @@ struct ContentView: View {
                 isActive = false
             }
         }
-    }
-    func removeCard(at index: Int) {
-        cards.remove(at: index)
+        .sheet(isPresented: $showingEditScreen, onDismiss: resetCards, content: EditCards.init) /*{ //this only works because it requires no initializaers
+                                                                                                 EditCards()
+                                                                                                 } */
+        .onAppear(perform: resetCards)
         
-        if cards.isEmpty {
-            isActive = false
+    }
+        func removeCard(at index: Int) {
+            guard index >= 0 else { return }
+            
+            cards.remove(at: index)
+            
+            if cards.isEmpty {
+                isActive = false
+            }
         }
-    }
+        
+        func resetCards() {
+            //cards = Array<Card>(repeating: .example, count: 10)
+            timeRemaining = 100
+            isActive = true
+            loadData()
+        }
+        
+        func loadData() {
+            if let data = UserDefaults.standard.data(forKey: "Cards") {
+                if let decoded = try? JSONDecoder().decode([Card].self, from: data) {
+                    cards = decoded
+                }
+            }
+        }
     
-    func resetCards() {
-        cards = Array<Card>(repeating: .example, count: 10)
-        timeRemaining = 100
-        isActive = true
-    }
 }
 
 /*  //Day 87 - Support specific accessibility neds with swiftUI

@@ -7,6 +7,18 @@
 
 import SwiftUI
 
+extension Shape {
+    func fill(using offset: CGSize) -> some View {
+        if offset.width == 0 {
+            self.fill(.white)
+        } else if offset.width < 0 {
+            self.fill(.red)
+        } else {
+            self.fill(.green)
+        }
+    }
+}
+
 struct CardView: View {
     @Environment(\.accessibilityDifferentiateWithoutColor) var accessibilityDifferentiateWithoutColor
     @Environment(\.accessibilityVoiceOverEnabled) var accessibilityVoiceOverEnabled
@@ -15,7 +27,7 @@ struct CardView: View {
     @State private var isShowingAnswer = false
     
     let card: Card
-    var removal: (() -> Void)? = nil // takes no parameters, returns nothing.
+    var removal: ((Bool) -> Void)? = nil // takes no parameters, returns nothing.
     
     
     var body: some View {
@@ -31,7 +43,10 @@ struct CardView: View {
                     accessibilityDifferentiateWithoutColor
                     ? nil
                     : RoundedRectangle(cornerRadius: 25)
-                        .fill(offset.width > 0 ? .green : .red)
+                        .fill(using: offset)
+                        //.fill(offset.width == 0 ? .white :
+                        //offset.width > 0 ? .green : .red)
+                    //ternary inside a ternary is a bad idea!
                 )
                 .shadow(radius: 10)
             
@@ -72,7 +87,12 @@ struct CardView: View {
                 .onEnded { _ in
                     if abs(offset.width) > 100 {
                         //remove the card
-                        removal?() // will only called if it has a value)
+                        if offset.width > 0 {
+                            removal?(false) // will only be called if it has a value)
+                        } else {
+                            removal?(true)
+                            offset = .zero
+                        }
                     } else {
                         offset = .zero
                     }
